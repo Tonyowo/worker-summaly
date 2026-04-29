@@ -1,3 +1,4 @@
+import type { GeneralScrapingOptions } from '@/general.js';
 import { scraping } from '@/utils/fetch.js';
 import summary from '@/summary.js';
 
@@ -20,9 +21,9 @@ export function test(url: URL): boolean {
 	url.hostname === 'www.amazon.au';
 }
 
-export async function summarize(url: URL): Promise<summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<summary | null> {
 	try {
-		const res = await scraping(url.href);
+		const res = await scraping(url.href, opts);
 		const $ = res.$;
 
 		const title = $('#title').text();

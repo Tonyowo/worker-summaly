@@ -1,5 +1,5 @@
 /**
- * Shared test utilities for Cloudflare Workers environment
+ * Shared test utilities for Node.js tests
  */
 
 import { beforeEach, afterEach } from 'vitest';

@@ -1,5 +1,5 @@
 /**
- * Core Tests for Cloudflare Workers environment
+ * Core tests for the Summaly library
  * Plugin tests are in separate files in test/plugins/
  */
 

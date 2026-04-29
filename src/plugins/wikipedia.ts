@@ -1,15 +1,25 @@
+import type { GeneralScrapingOptions } from '@/general.js';
+import type Summary from '@/summary.js';
 import { get } from '@/utils/fetch.js';
-import summary from '@/summary.js';
 import { clip } from '@/utils/clip.js';
 
 export const name = 'wikipedia';
+
+type WikipediaApiResponse = {
+	query?: {
+		pages?: Record<string, {
+			title: string;
+			extract: string;
+		}>;
+	};
+};
 
 export function test(url: URL): boolean {
 	if (!url.hostname) return false;
 	return /\.wikipedia\.org$/.test(url.hostname);
 }
 
-export async function summarize(url: URL): Promise<summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
 	const lang = url.host ? url.host.split('.')[0] : null;
 	const title = url.pathname ? url.pathname.split('/')[2] : null;
 	const endpoint = `https://${lang}.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles=${title}`;
@@ -23,11 +33,12 @@ export async function summarize(url: URL): Promise<summary | null> {
 	});
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let body = await get(endpoint) as any;
-		body = JSON.parse(body);
+		const body = JSON.parse(await get(endpoint, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		})) as WikipediaApiResponse;
 
-		if (!('query' in body) || !('pages' in body.query)) {
+		const pages = body.query?.pages;
+		if (!pages) {
 			console.error({
 				event: 'plugin_api_error',
 				plugin: 'wikipedia',
@@ -37,7 +48,18 @@ export async function summarize(url: URL): Promise<summary | null> {
 			return null;
 		}
 
-		const info = body.query.pages[Object.keys(body.query.pages)[0]];
+		const pageKey = Object.keys(pages)[0];
+		if (!pageKey) {
+			console.error({
+				event: 'plugin_api_error',
+				plugin: 'wikipedia',
+				url: url.href,
+				reason: 'missing_page_info',
+			});
+			return null;
+		}
+
+		const info = pages[pageKey];
 
 		return {
 			title: info.title,

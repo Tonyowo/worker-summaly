@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import type Summary from '@/summary.js';
+import type { GeneralScrapingOptions } from '@/general.js';
 import { get } from '@/utils/fetch.js';
 
 export const name = 'youtube';
@@ -13,7 +14,7 @@ export const name = 'youtube';
 
 // oEmbed response type definition
 interface YouTubeOEmbed {
-	type: 'video';
+	type: string;
 	version: '1.0';
 	title?: string;
 	author_name?: string;
@@ -52,7 +53,7 @@ export function test(url: URL): boolean {
 /**
  * Summarize YouTube video using oEmbed endpoint
  */
-export async function summarize(url: URL): Promise<Summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
 	try {
 		// Build oEmbed URL
 		const oEmbedUrl = new URL('https://www.youtube.com/oembed');
@@ -60,7 +61,9 @@ export async function summarize(url: URL): Promise<Summary | null> {
 		oEmbedUrl.searchParams.append('format', 'json');
 
 		// Get oEmbed data
-		const response = await get(oEmbedUrl.href);
+		const response = await get(oEmbedUrl.href, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const data = JSON.parse(response) as YouTubeOEmbed;
 
 		// Validate response type

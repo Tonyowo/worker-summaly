@@ -1,8 +1,8 @@
+import { decode } from 'html-entities';
 import type Summary from '@/summary.js';
 import type { GeneralScrapingOptions } from '@/general.js';
 import { getResponse, DEFAULT_BOT_UA } from '@/utils/fetch.js';
 import { clip } from '@/utils/clip.js';
-import { decode } from 'html-entities';
 
 export const name = 'booth';
 
@@ -84,6 +84,7 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 			},
 			responseTimeout: opts?.responseTimeout,
 			operationTimeout: opts?.operationTimeout,
+			allowPrivateIp: opts?.allowPrivateIp,
 		});
 		const data = await response.json() as BoothApiResponse;
 
@@ -131,7 +132,7 @@ function buildSummary(data: BoothApiResponse): Summary {
 	const fullDescription = descriptionParts.join('\n');
 
 	// Get the first image as thumbnail
-	const thumbnail = data.images?.[0]?.original || null;
+	const thumbnail = data.images[0]?.original || null;
 
 	return {
 		title: data.name,

@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import type Summary from '@/summary.js';
+import type { GeneralScrapingOptions } from '@/general.js';
 import { get } from '@/utils/fetch.js';
 
 export const name = 'spotify';
@@ -36,14 +37,16 @@ export function test(url: URL): boolean {
 /**
  * Summarize Spotify content using oEmbed endpoint
  */
-export async function summarize(url: URL): Promise<Summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
 	try {
 		// Build oEmbed URL
 		const oEmbedUrl = new URL('https://open.spotify.com/oembed');
 		oEmbedUrl.searchParams.append('url', url.href);
 
 		// Get oEmbed data
-		const response = await get(oEmbedUrl.href);
+		const response = await get(oEmbedUrl.href, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const data = JSON.parse(response) as SpotifyOEmbed;
 
 		// Parse iframe src from HTML

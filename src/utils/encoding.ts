@@ -1,3 +1,5 @@
+import { TextDecoder } from 'node:util';
+
 // Reusable TextDecoder for ASCII parsing (module-level constant)
 const asciiDecoder = new TextDecoder('ascii', { fatal: false, ignoreBOM: true });
 

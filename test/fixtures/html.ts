@@ -1,5 +1,5 @@
 /**
- * HTML test fixtures for Workers environment
+ * HTML test fixtures
  * These fixtures replace file system reads with embedded content
  */
 

@@ -1,5 +1,5 @@
 /**
- * oEmbed JSON test fixtures for Workers environment
+ * oEmbed JSON test fixtures
  * These fixtures replace file system reads with embedded content
  */
 

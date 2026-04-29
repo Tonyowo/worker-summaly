@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import type Summary from '@/summary.js';
+import type { GeneralScrapingOptions } from '@/general.js';
 import { get } from '@/utils/fetch.js';
 import { clip } from '@/utils/clip.js';
 
@@ -12,7 +13,7 @@ export function test(url: URL): boolean {
 	return /^\/prod\/[A-Z0-9]{6}-[A-Z0-9]{9}/.test(url.pathname);
 }
 
-export async function summarize(url: URL): Promise<Summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
 	const match = url.pathname.match(/^\/prod\/([A-Z0-9]{6}-[A-Z0-9]{9})/);
 	if (!match) return null;
 
@@ -21,8 +22,8 @@ export async function summarize(url: URL): Promise<Summary | null> {
 	try {
 		// Fetch both APIs in parallel
 		const [basicData, descData] = await Promise.all([
-			fetchBasicInfo(productId),
-			fetchDescription(productId),
+			fetchBasicInfo(productId, opts),
+			fetchDescription(productId, opts),
 		]);
 
 		if (!basicData) {
@@ -59,10 +60,12 @@ interface PchomeDescription {
 	slogan: string | null;
 }
 
-async function fetchBasicInfo(productId: string): Promise<PchomeBasicInfo | null> {
+async function fetchBasicInfo(productId: string, opts?: GeneralScrapingOptions): Promise<PchomeBasicInfo | null> {
 	const apiUrl = `https://ecapi-cdn.pchome.com.tw/ecshop/prodapi/v2/prod/${productId}&fields=Name,Nick,Price,Pic&_callback=jsonp_prod`;
 
-	const response = await get(apiUrl);
+	const response = await get(apiUrl, {
+		allowPrivateIp: opts?.allowPrivateIp,
+	});
 
 	// Parse JSONP response
 	// Format: try{jsonp_prod({...});}catch(e){...}
@@ -99,11 +102,13 @@ async function fetchBasicInfo(productId: string): Promise<PchomeBasicInfo | null
 	};
 }
 
-async function fetchDescription(productId: string): Promise<PchomeDescription> {
+async function fetchDescription(productId: string, opts?: GeneralScrapingOptions): Promise<PchomeDescription> {
 	try {
 		const apiUrl = `https://ecapi-cdn.pchome.com.tw/cdn/ecshop/prodapi/v2/prod/${productId}/desc&fields=Meta,SloganInfo&_callback=jsonp_desc`;
 
-		const response = await get(apiUrl);
+		const response = await get(apiUrl, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 
 		// Parse JSONP response
 		// Format: try{jsonp_desc({...});}catch(e){...}

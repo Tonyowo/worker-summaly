@@ -12,7 +12,7 @@ import { get, head, scraping } from '@/utils/fetch.js';
  *
  * Width should always be 100%.
  */
-async function getOEmbedPlayer($: cheerio.CheerioAPI, pageUrl: string): Promise<Player | null> {
+async function getOEmbedPlayer($: cheerio.CheerioAPI, pageUrl: string, opts?: GeneralScrapingOptions): Promise<Player | null> {
 	const href = $('link[type="application/json+oembed"]').attr('href');
 	if (!href) {
 		return null;
@@ -41,7 +41,9 @@ async function getOEmbedPlayer($: cheerio.CheerioAPI, pageUrl: string): Promise<
 		oEmbedUrl: oEmbedUrl.href,
 	});
 
-	const oEmbed = await get(oEmbedUrl.href).catch((error) => {
+	const oEmbed = await get(oEmbedUrl.href, {
+		allowPrivateIp: opts?.allowPrivateIp,
+	}).catch((error) => {
 		console.warn({
 			event: 'oembed_fetch_error',
 			pageUrl,
@@ -190,6 +192,7 @@ export type GeneralScrapingOptions = {
 	operationTimeout?: number;
 	contentLengthLimit?: number;
 	contentLengthRequired?: boolean;
+	allowPrivateIp?: boolean;
 };
 
 export async function general(_url: URL | string, opts?: GeneralScrapingOptions): Promise<Summary | null> {
@@ -212,6 +215,7 @@ export async function general(_url: URL | string, opts?: GeneralScrapingOptions)
 		operationTimeout: opts?.operationTimeout,
 		contentLengthLimit: opts?.contentLengthLimit,
 		contentLengthRequired: opts?.contentLengthRequired,
+		allowPrivateIp: opts?.allowPrivateIp,
 	});
 
 	return await parseGeneral(url, res);
@@ -326,7 +330,9 @@ export async function parseGeneral(_url: URL | string, res: Awaited<ReturnType<t
 	const find = async (path: string) => {
 		const target = new URL(path, url.href);
 		try {
-			await head(target.href);
+			await head(target.href, {
+				allowPrivateIp: res.options?.allowPrivateIp,
+			});
 			return target;
 		} catch (error) {
 			console.debug({
@@ -345,7 +351,7 @@ export async function parseGeneral(_url: URL | string, res: Awaited<ReturnType<t
 
 	const [icon, oEmbed] = await Promise.all([
 		getIcon(),
-		getOEmbedPlayer($, url.href),
+		getOEmbedPlayer($, url.href, res.options),
 	]);
 
 	// Clean up the title

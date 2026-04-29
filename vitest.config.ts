@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
-import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config';
+import { defineConfig } from 'vitest/config';
 
-export default defineWorkersConfig({
+export default defineConfig({
 	resolve: {
 		alias: {
 			'@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -9,14 +9,6 @@ export default defineWorkersConfig({
 	},
 	test: {
 		globals: true,
-		poolOptions: {
-			workers: {
-				wrangler: { configPath: './wrangler.jsonc' },
-				miniflare: {
-					// Enable compatibility flags for Node.js compatibility
-					compatibilityFlags: ['nodejs_compat'],
-				},
-			},
-		},
+		environment: 'node',
 	},
 });

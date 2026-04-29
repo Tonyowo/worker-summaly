@@ -67,7 +67,7 @@ export function test(url: URL): boolean {
 /**
  * Summarize Pixiv artwork using Ajax API
  */
-export async function summarize(url: URL, _opts?: GeneralScrapingOptions): Promise<Summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
 	// Parse artwork ID from URL
 	const match = url.pathname.match(/artworks\/(\d+)/);
 	if (!match) return null;
@@ -75,7 +75,9 @@ export async function summarize(url: URL, _opts?: GeneralScrapingOptions): Promi
 	const artworkId = match[1];
 
 	try {
-		const response = await get(`https://www.pixiv.net/ajax/illust/${artworkId}`);
+		const response = await get(`https://www.pixiv.net/ajax/illust/${artworkId}`, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const data = JSON.parse(response) as PixivAjaxResponse;
 
 		if (data.error || !data.body) {
@@ -89,7 +91,7 @@ export async function summarize(url: URL, _opts?: GeneralScrapingOptions): Promi
 			return null;
 		}
 
-		return buildSummary(data.body, artworkId, url);
+		return buildSummary(data.body, artworkId);
 	} catch (error) {
 		console.error({
 			event: 'plugin_error',
@@ -104,7 +106,7 @@ export async function summarize(url: URL, _opts?: GeneralScrapingOptions): Promi
 /**
  * Build Summary object from API response
  */
-function buildSummary(body: NonNullable<PixivAjaxResponse['body']>, artworkId: string, _url: URL): Summary {
+function buildSummary(body: NonNullable<PixivAjaxResponse['body']>, artworkId: string): Summary {
 	// Get description: prefer Twitter description, fallback to regular description
 	let description = body.extraData?.meta?.twitter?.description || body.description;
 	if (description) {

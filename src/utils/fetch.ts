@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import type { GeneralScrapingOptions } from '@/general.js';
 import { StatusError } from '@/utils/status-error.js';
 import { detectEncoding, toUtf8 } from '@/utils/encoding.js';
+import { assertPublicUrl } from '@/utils/url-safety.js';
 
 // Constants - hardcoded version instead of reading from package.json
 export const DEFAULT_RESPONSE_TIMEOUT = 20 * 1000;
@@ -21,7 +22,10 @@ export type FetchOptions = {
 	operationTimeout?: number;
 	contentLengthLimit?: number;
 	contentLengthRequired?: boolean;
+	allowPrivateIp?: boolean;
 };
+
+const MAX_REDIRECTS = 10;
 
 /**
  * Make an HTTP request using native fetch API
@@ -51,13 +55,53 @@ export async function getResponse(args: FetchOptions): Promise<Response> {
 			timeoutMs: timeout,
 		});
 
-		const response = await fetch(args.url, {
-			method: args.method,
-			headers,
-			body: args.body,
-			signal: controller.signal,
-			redirect: 'follow',
-		});
+		let requestUrl = args.url;
+		let response: Response | null = null;
+
+		for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++) {
+			await assertPublicUrl(requestUrl, {
+				allowPrivateIp: args.allowPrivateIp !== false,
+			});
+
+			response = await fetch(requestUrl, {
+				method: args.method,
+				headers,
+				body: args.body,
+				signal: controller.signal,
+				redirect: 'manual',
+			});
+
+			if (![301, 302, 303, 307, 308].includes(response.status)) {
+				break;
+			}
+
+			const location = response.headers.get('location');
+			if (!location) {
+				break;
+			}
+
+			const redirectUrl = new URL(location, requestUrl).href;
+			await assertPublicUrl(redirectUrl, {
+				allowPrivateIp: args.allowPrivateIp !== false,
+			});
+
+			console.debug({
+				event: 'http_redirect',
+				url: requestUrl,
+				redirectUrl,
+				status: response.status,
+			});
+
+			requestUrl = redirectUrl;
+		}
+
+		if (!response) {
+			throw new Error('Request failed');
+		}
+
+		if ([301, 302, 303, 307, 308].includes(response.status)) {
+			throw new Error(`Too many redirects (${MAX_REDIRECTS})`);
+		}
 
 		clearTimeout(timeoutId);
 
@@ -168,6 +212,7 @@ export async function scraping(url: string, opts?: GeneralScrapingOptions) {
 		operationTimeout: opts?.operationTimeout,
 		contentLengthLimit: opts?.contentLengthLimit,
 		contentLengthRequired: opts?.contentLengthRequired,
+		allowPrivateIp: opts?.allowPrivateIp,
 	});
 
 	// Get ArrayBuffer and convert to Uint8Array
@@ -198,6 +243,7 @@ export async function scraping(url: string, opts?: GeneralScrapingOptions) {
 	});
 
 	return {
+		options: opts,
 		body,
 		$,
 		response,
@@ -207,7 +253,7 @@ export async function scraping(url: string, opts?: GeneralScrapingOptions) {
 /**
  * Simple GET request returning text
  */
-export async function get(url: string): Promise<string> {
+export async function get(url: string, opts?: Pick<GeneralScrapingOptions, 'allowPrivateIp'>): Promise<string> {
 	const response = await getResponse({
 		url,
 		method: 'GET',
@@ -215,6 +261,7 @@ export async function get(url: string): Promise<string> {
 			'accept': '*/*',
 			'user-agent': DEFAULT_BOT_UA,
 		},
+		allowPrivateIp: opts?.allowPrivateIp,
 	});
 
 	return await response.text();
@@ -223,7 +270,7 @@ export async function get(url: string): Promise<string> {
 /**
  * HEAD request to get headers
  */
-export async function head(url: string): Promise<Response> {
+export async function head(url: string, opts?: Pick<GeneralScrapingOptions, 'allowPrivateIp'>): Promise<Response> {
 	return await getResponse({
 		url,
 		method: 'HEAD',
@@ -231,6 +278,7 @@ export async function head(url: string): Promise<Response> {
 			'accept': '*/*',
 			'user-agent': DEFAULT_BOT_UA,
 		},
+		allowPrivateIp: opts?.allowPrivateIp,
 	});
 }
 
@@ -250,5 +298,6 @@ export function getFetchOptions(url: string, opts?: GeneralScrapingOptions): Omi
 		operationTimeout: opts?.operationTimeout,
 		contentLengthLimit: opts?.contentLengthLimit,
 		contentLengthRequired: opts?.contentLengthRequired,
+		allowPrivateIp: opts?.allowPrivateIp,
 	};
 }

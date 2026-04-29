@@ -1,274 +1,221 @@
-# Summaly for Cloudflare Workers
+# Summaly for Self-Hosted Node.js
 
-A fast, edge-based web page summarization API powered by **Cloudflare Workers**. Extract metadata, Open Graph tags, Twitter Cards, oEmbed players, and more from any URL at lightning speed.
+A self-hosted web page summarization API for extracting metadata, Open Graph tags, Twitter Cards, oEmbed players, ActivityPub links, and sensitive-content signals from URLs.
 
-Designed for Misskey.
+Designed for Misskey-compatible URL preview workflows.
 
-## ✨ Features
+## Features
 
-- 🚀 **Edge-Native**: Runs on Cloudflare's global edge network for minimal latency
-- 🔍 **Rich Metadata Extraction**: Open Graph, Twitter Cards, standard HTML metadata
-- 🎬 **oEmbed Support**: Automatic player detection for YouTube, Vimeo, and more
-- 🔌 **Built-in Plugins**: Specialized handlers for major platforms and services
-- ⚠️ **Content Safety**: Automatic sensitive content detection
-- 🌐 **CORS Enabled**: Ready for browser-based applications
+- **Self-hosted Node.js service**: Runs as a normal Node process on your own server
+- **Rich metadata extraction**: Open Graph, Twitter Cards, HTML metadata, favicons, oEmbed players
+- **Built-in plugins**: Specialized handlers for major social, video, content, art, and marketplace platforms
+- **SSRF protection**: Public HTTP API blocks localhost, private IPs, link-local, and reserved addresses by default
+- **CORS enabled**: Ready for browser-based applications
+- **TypeScript**: Strictly typed ESM codebase
 
-## 🚀 Quick Start
-
-### Deploy to Cloudflare Workers
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jim60105/worker-summaly)
-
-### Misskey Control Panel Settings
-
-![Misskey Control Panel](https://github.com/user-attachments/assets/1391be0a-522d-4921-a5e5-efcef67006ff)
-
-### Local Development
-
-Run the development server with hot reload:
+## Quick Start
 
 ```bash
-pnpm run dev
+pnpm install
+pnpm build
+pnpm start
 ```
 
-The API will be available at `http://localhost:8787`
+The API listens on `http://0.0.0.0:8787` by default.
 
-## 🔌 Built-in Plugins
+Environment variables:
 
-Worker Summaly includes **20+ specialized plugins** for extracting metadata from popular platforms and services:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HOST` | `0.0.0.0` | Address to bind |
+| `PORT` | `8787` | Port to listen on |
 
-### Social Media & Communication
+Example:
 
-- **Twitter/X** - Enhanced metadata extraction for tweets
-- **Threads** - Meta's Threads platform support
-- **Bluesky** - Decentralized social network support
-- **Misskey** - Japanese microblogging platform
-- **Plurk** - Timeline-based social network
-- **Weibo** - Chinese microblogging platform
-- **ActivityPub** - Federated ActivityPub/Fediverse metadata for Mastodon, Pleroma, Lemmy, PeerTube, PixelFed, GoToSocial, Friendica, Hubzilla, and other federated networks
+```bash
+HOST=127.0.0.1 PORT=3000 pnpm start
+```
 
-### Video & Streaming
+## Production Deployment
 
-- **YouTube** - Video metadata and player embedding
-- **Twitch** - Live streaming platform with retry logic for cached responses
-- **TikTok** - Short-form video content
-- **Bilibili** - Chinese video sharing platform
-- **Iwara** - Video sharing platform
-- **Spotify** - Music and podcast streaming
+Install dependencies, build, and run the compiled server:
 
-### Content Platforms
+```bash
+pnpm install --prod=false
+pnpm build
+pnpm start
+```
 
-- **Wikipedia** - Encyclopedia articles with API integration
-- **Amazon** - Product page metadata extraction
-- **Bahamut** - Taiwanese gaming and anime community
-- **PTT** - Taiwan's largest online forum
-- **Komiflo** - Comic platform
-- **E-Hentai** - Adult content platform
+For a production server, run `node built/server.js` behind a process manager such as PM2 or systemd, and put Nginx/Caddy in front if you need TLS, custom domains, rate limiting, or access logs.
 
-### Art & Creative
+PM2 example:
 
-- **Pixiv** - Japanese illustration community
-- **Nijie** - Japanese art community
+```bash
+pnpm build
+HOST=127.0.0.1 PORT=8787 pm2 start built/server.js --name summaly
+```
 
-### E-commerce & Marketplaces
+systemd example:
 
-- **PChome** - Taiwanese e-commerce platform
-- **DLsite** - Digital content marketplace
-- **Booth** - Creator marketplace metadata via the Booth JSON API
-- **Steam** - Valve's digital game distribution platform
+```ini
+[Unit]
+Description=Summaly Node service
+After=network.target
 
-### Other Services
+[Service]
+WorkingDirectory=/opt/worker-summaly
+ExecStart=/usr/bin/node built/server.js
+Environment=HOST=127.0.0.1
+Environment=PORT=8787
+Restart=always
+User=summaly
 
-- **Branch.io** - Deep link resolution
+[Install]
+WantedBy=multi-user.target
+```
 
-> [!WARNING]
-> The Instagram plugin is included but currently non-functional due to platform restrictions. It forces sitename to "Instagram" but cannot reliably extract metadata.
+Nginx reverse proxy example:
 
-## 📖 API Documentation
+```nginx
+location /summaly/ {
+	proxy_pass http://127.0.0.1:8787/;
+	proxy_set_header Host $host;
+	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
 
-### Endpoint
+## API
+
+### Summarize
 
 ```http
 GET /?url={target_url}&lang={language}&timeout={timeout}&contentLengthLimit={limit}&contentLengthRequired={boolean}&userAgent={agent}
+GET /api/summarize?url={target_url}
 ```
 
-### Query Parameters
+Query parameters:
 
-| Parameter | Type     | Required | Description                                       | Default |
-|-----------|----------|----------|---------------------------------------------------|---------|
-| `url`     | string   | ✅       | The URL of the web page to summarize              | - |
-| `lang`    | string   | ❌       | Accept-Language header value (e.g., `en`, `ja`)   | - |
-| `timeout` | number   | ❌       | Operation timeout in milliseconds                 | 60000 (60s) |
-| `contentLengthLimit` | number | ❌ | Maximum response size in bytes              | 10485760 (10MB) |
-| `contentLengthRequired` | boolean | ❌ | Require Content-Length header            | false |
-| `userAgent` | string | ❌       | Custom User-Agent header                        | iPad Safari UA |
+| Parameter | Type | Required | Description | Default |
+|-----------|------|----------|-------------|---------|
+| `url` | string | Yes | URL to summarize. Only public `http:` and `https:` URLs are accepted by the HTTP service. | - |
+| `lang` | string | No | Accept-Language header value | - |
+| `timeout` | number | No | Operation timeout in milliseconds | `60000` |
+| `contentLengthLimit` | number | No | Maximum response size in bytes | `10485760` |
+| `contentLengthRequired` | boolean | No | Require `Content-Length` from upstream | `false` |
+| `userAgent` | string | No | Custom upstream User-Agent | iPad Safari UA |
 
-### Example Request
+Example:
 
 ```bash
-# Basic usage
-curl "https://your-worker.workers.dev/?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-# With timeout and content length limit
-curl "https://your-worker.workers.dev/?url=https://example.com&timeout=5000&contentLengthLimit=1048576"
-
-# With custom user agent
-curl "https://your-worker.workers.dev/?url=https://example.com&userAgent=MyBot/1.0"
-
-# Require Content-Length header
-curl "https://your-worker.workers.dev/?url=https://example.com&contentLengthRequired=true"
+curl "http://127.0.0.1:8787/?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+curl "http://127.0.0.1:8787/?url=https://example.com&timeout=5000&contentLengthLimit=1048576"
+curl "http://127.0.0.1:8787/?url=https://example.com&userAgent=MyBot/1.0"
 ```
 
-### Response Format
+Response:
 
 ```typescript
 {
-  title: string | null;
-  icon: string | null;
-  description: string | null;
-  thumbnail: string | null;
-  sitename: string | null;
-  player: {
-    url: string | null;
-    width: number | null;
-    height: number | null;
-    allow: string[];
-  };
-  sitename: string | null;
-  sensitive: boolean;
-  activityPub: string | null;
-  fediverseCreator: string | null;
-  url: string;
+	title: string | null;
+	icon: string | null;
+	description: string | null;
+	thumbnail: string | null;
+	sitename: string | null;
+	player: {
+		url: string | null;
+		width: number | null;
+		height: number | null;
+		allow: string[];
+	};
+	sensitive: boolean;
+	activityPub: string | null;
+	fediverseCreator: string | null;
+	url: string;
 }
 ```
 
-### Example Response
+### Health Check
 
-```json
-{
-  "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
-  "icon": "https://www.youtube.com/s/desktop/014dbbed/img/favicon_32x32.png",
-  "description": null,
-  "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
-  "sitename": "YouTube",
-  "player": {
-    "url": "https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed",
-    "width": 200,
-    "height": 113,
-    "allow": [
-      "autoplay",
-      "clipboard-write",
-      "encrypted-media",
-      "fullscreen",
-      "picture-in-picture"
-    ]
-  },
-  "sensitive": false,
-  "activityPub": null,
-  "fediverseCreator": null,
-  "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ"
-}
-```
-
-### Additional Endpoints
-
-#### Health Check
-
-```bash
+```http
 GET /health
 ```
 
-Returns `{"status": "ok"}` with HTTP 200.
+Returns:
 
-## 🧪 Testing
-
-```bash
-# Run unit tests (Workers runtime)
-pnpm test
-
-# Run Worker integration tests
-pnpm test:worker
-
-# Run all test suites
-pnpm test:all
-
-# Watch mode for development
-pnpm test:watch
+```json
+{"status":"ok"}
 ```
 
-See [TESTING.md](TESTING.md) for comprehensive testing documentation.
+## Built-In Plugins
 
-## 🏗️ Project Structure
+Social and communication:
+
+- Twitter/X
+- Threads
+- Bluesky
+- Misskey
+- Plurk
+- Weibo
+- ActivityPub/Fediverse metadata
+
+Video and streaming:
+
+- YouTube
+- Twitch
+- TikTok
+- Bilibili
+- Iwara
+- Spotify
+
+Content, art, and commerce:
+
+- Wikipedia
+- Amazon
+- Bahamut
+- PTT
+- Komiflo
+- E-Hentai
+- Pixiv
+- Nijie
+- PChome
+- DLsite
+- Booth
+- Steam
+- Branch.io deep links
+
+## Development
+
+```bash
+pnpm build
+pnpm dev
+pnpm test
+pnpm eslint
+```
+
+`pnpm dev` builds the TypeScript project and starts `built/server.js`.
+
+## Project Structure
 
 ```text
 src/
-├── worker.ts          # Cloudflare Workers entry point
+├── server.ts          # Node.js HTTP entry point
+├── http-handler.ts    # Shared HTTP routing, validation, CORS, JSON responses
 ├── index.ts           # Core summaly() function
 ├── general.ts         # HTML parsing and metadata extraction
 ├── summary.ts         # TypeScript type definitions
 ├── iplugin.ts         # Plugin interface definition
 ├── plugins/           # Site-specific plugins
-│   ├── index.ts       # Plugin registry
-│   ├── amazon.ts      # Amazon products
-│   ├── bahamut.ts     # Bahamut forum
-│   ├── bilibili.ts    # Bilibili videos
-│   ├── bluesky.ts     # Bluesky posts
-│   ├── pixiv.ts       # Pixiv artworks
-│   ├── steam.ts       # Steam games
-│   ├── twitter.ts     # Twitter/X tweets
-│   ├── wikipedia.ts   # Wikipedia articles
-│   ├── youtube.ts     # YouTube videos
-│   └── ...            # More plugins
-└── utils/             # Utility functions
-    ├── fetch.ts       # HTTP client wrapper
-    ├── encoding.ts    # Character encoding handling
-    ├── clip.ts        # Text truncation
-    └── ...
+└── utils/             # Fetching, encoding, URL safety, and text utilities
 
 test/
-├── index.test.ts      # Core functionality tests (57 tests)
-├── worker.test.ts     # Worker integration tests (7 tests)
+├── index.test.ts      # Core functionality tests
+├── server.test.ts     # Local HTTP handler and URL safety tests
 ├── plugins/           # Plugin-specific tests
-│   ├── bahamut.test.ts
-│   ├── booth.test.ts
-│   ├── pixiv.test.ts
-│   ├── twitter.test.ts
-│   └── ...
-├── fixtures/          # Embedded test fixtures
-│   ├── html.ts
-│   └── oembed.ts
-└── utils/
-    └── test-utils.ts  # Shared test utilities
+├── fixtures/          # Embedded HTML and oEmbed fixtures
+└── utils/             # Shared test utilities
 ```
 
-## 📚 Documentation
-
-- [AGENTS.md](AGENTS.md) - Detailed project documentation and coding standards
-- [TESTING.md](TESTING.md) - Comprehensive testing guide
-- [CHANGELOG.md](CHANGELOG.md) - Version history and changes
-
-## 📄 License
-
-<img src="https://github.com/user-attachments/assets/c361271f-f9e6-4372-af8d-c555432f40a7" alt="agplv3" width="300" />
+## License
 
 [GNU AFFERO GENERAL PUBLIC LICENSE Version 3](./LICENSE)
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-## 🙏 Acknowledgments
-
-- Original project: [misskey-dev/summaly](https://github.com/misskey-dev/summaly)
-- Plugins inspired by:
-  - [ermiana](https://github.com/canaria3406/ermiana)
-  - [mei23/summaly](https://github.com/mei23/summaly)
-  - [FxBilibili](https://github.com/cubewhy/fxbilibili)
-  - [Tissue](https://github.com/shikorism/tissue)
-- Underlying proxy:
-  - [fxTikTok](https://github.com/okdargy/fxTikTok)
-  - [FixThreads](https://github.com/milanmdev/fixthreads)
-  - [FxEmbed](https://github.com/FxEmbed/FxEmbed)
-  - [vxTwitter](https://github.com/dylanpdx/BetterTwitFix)

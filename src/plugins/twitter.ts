@@ -1,3 +1,4 @@
+import type { GeneralScrapingOptions } from '@/general.js';
 import summary from '@/summary.js';
 import { get } from '@/utils/fetch.js';
 import { clip } from '@/utils/clip.js';
@@ -112,7 +113,7 @@ function buildSummaryFromVx(data: VxTwitterResponse): summary {
 	};
 }
 
-export async function summarize(url: URL): Promise<summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<summary | null> {
 	// 1. Parse tweet ID from URL
 	const pathMatch = url.pathname.match(/\/[A-Za-z0-9_]+\/status\/(\d+)/);
 	if (!pathMatch) return null;
@@ -120,7 +121,9 @@ export async function summarize(url: URL): Promise<summary | null> {
 
 	// 2. Try fxtwitter API
 	try {
-		const response = await get(`https://api.fxtwitter.com/i/status/${tweetId}`);
+		const response = await get(`https://api.fxtwitter.com/i/status/${tweetId}`, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const data = JSON.parse(response) as FxTwitterResponse;
 
 		if ('tweet' in data) {
@@ -139,7 +142,9 @@ export async function summarize(url: URL): Promise<summary | null> {
 
 	// 3. Fallback: try vxtwitter API
 	try {
-		const response = await get(`https://api.vxtwitter.com/i/status/${tweetId}`);
+		const response = await get(`https://api.vxtwitter.com/i/status/${tweetId}`, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const data = JSON.parse(response) as VxTwitterResponse;
 		return buildSummaryFromVx(data);
 	} catch (error) {

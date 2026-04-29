@@ -31,7 +31,6 @@
 		},
 		"outDir": "./built",
 		"types": [
-			"@cloudflare/workers-types",
 			"node"
 		],
 		"typeRoots": [

@@ -122,6 +122,7 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 			},
 			responseTimeout: opts?.responseTimeout,
 			operationTimeout: opts?.operationTimeout,
+			allowPrivateIp: opts?.allowPrivateIp,
 		});
 		const data = await response.json() as SteamApiResponse;
 

@@ -58,7 +58,7 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 
 		// Fetch thumbnail from API
 		const comicId = match[1];
-		const thumbnail = await fetchThumbnailFromApi(comicId);
+		const thumbnail = await fetchThumbnailFromApi(comicId, opts);
 		if (thumbnail) {
 			result.thumbnail = thumbnail;
 		}
@@ -80,10 +80,12 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 /**
  * Fetch thumbnail URL from Komiflo API
  */
-async function fetchThumbnailFromApi(comicId: string): Promise<string | null> {
+async function fetchThumbnailFromApi(comicId: string, opts?: GeneralScrapingOptions): Promise<string | null> {
 	try {
 		const apiUrl = `https://api.komiflo.com/content/id/${comicId}`;
-		const response = await get(apiUrl);
+		const response = await get(apiUrl, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const data = JSON.parse(response) as KomifloApiResponse;
 
 		// Try content.named_imgs first, then children[0].named_imgs

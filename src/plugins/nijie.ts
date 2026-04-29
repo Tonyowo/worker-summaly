@@ -88,9 +88,11 @@ async function extractThumbnailFromLdJson(
 		});
 
 		// Use first ImageObject's thumbnailUrl
-		const imageObject = imageObjects[0];
-		if (imageObject?.thumbnailUrl) {
-			summary.thumbnail = imageObject.thumbnailUrl;
+		if (imageObjects.length > 0) {
+			const imageObject = imageObjects[0];
+			if (imageObject.thumbnailUrl) {
+				summary.thumbnail = imageObject.thumbnailUrl;
+			}
 		}
 	} catch (error) {
 		console.debug({

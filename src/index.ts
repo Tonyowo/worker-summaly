@@ -55,6 +55,11 @@ export type SummalyOptions = {
 	 * If set to true, it will be an error if the other server does not return content-length.
 	 */
 	contentLengthRequired?: boolean;
+
+	/**
+	 * Whether requests to private, local, and reserved addresses are allowed.
+	 */
+	allowPrivateIp?: boolean;
 };
 
 export const summalyDefaultOptions = {
@@ -87,15 +92,20 @@ function getPluginName(plugin: SummalyPlugin): string {
  * Summarize an web page
  */
 export const summaly = async (url: string, options?: SummalyOptions): Promise<SummalyResult> => {
-	const opts = Object.assign(summalyDefaultOptions, options);
+	const opts = {
+		...summalyDefaultOptions,
+		...options,
+	};
 
 	const plugins = builtinPlugins.concat(opts.plugins || []);
 
 	let actualUrl = url;
 	if (opts.followRedirects) {
 		try {
-			const response = await head(url);
-			actualUrl = response.url;
+			const response = await head(url, {
+				allowPrivateIp: opts.allowPrivateIp,
+			});
+			actualUrl = response.url || url;
 			if (actualUrl !== url) {
 				console.debug({
 					event: 'url_redirect',
@@ -116,7 +126,7 @@ export const summaly = async (url: string, options?: SummalyOptions): Promise<Su
 	const _url = new URL(actualUrl);
 
 	// Find matching plugin
-	const match = plugins.filter(plugin => plugin.test(_url))[0];
+	const match = plugins.find(plugin => plugin.test(_url));
 
 	// Get summary
 	const scrapingOptions: GeneralScrapingOptions = {
@@ -127,6 +137,7 @@ export const summaly = async (url: string, options?: SummalyOptions): Promise<Su
 		operationTimeout: opts.operationTimeout,
 		contentLengthLimit: opts.contentLengthLimit,
 		contentLengthRequired: opts.contentLengthRequired,
+		allowPrivateIp: opts.allowPrivateIp,
 	};
 
 	let summary = null;

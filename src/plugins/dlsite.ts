@@ -92,7 +92,9 @@ function correctUrl(url: URL): URL | null {
  */
 async function extractPrice(url: URL, opts?: GeneralScrapingOptions): Promise<string | null> {
 	try {
-		const html = await get(url.href);
+		const html = await get(url.href, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
 		const $ = cheerio.load(html);
 
 		// DLsite stores price in data attributes

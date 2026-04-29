@@ -1,5 +1,5 @@
-import type Summary from '@/summary.js';
 import { decode as decodeHtml } from 'html-entities';
+import type Summary from '@/summary.js';
 import { clip } from '@/utils/clip.js';
 
 export const name = 'activitypub';
