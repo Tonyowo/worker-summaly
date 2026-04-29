@@ -32,15 +32,15 @@ interface PixivAjaxResponse {
 			}>;
 		};
 		urls?: {
-			thumb?: string;
-			small?: string;
-			regular?: string;
-			original?: string;
+			thumb?: string | null;
+			small?: string | null;
+			regular?: string | null;
+			original?: string | null;
 		};
 		userIllusts?: {
 			[key: string]: {
 				url?: string;
-			};
+			} | null;
 		};
 		extraData?: {
 			meta?: {
@@ -50,6 +50,19 @@ interface PixivAjaxResponse {
 			};
 		};
 	};
+}
+
+interface PixivPagesResponse {
+	error: boolean;
+	message: string;
+	body?: Array<{
+		urls?: {
+			thumb_mini?: string | null;
+			small?: string | null;
+			regular?: string | null;
+			original?: string | null;
+		};
+	}>;
 }
 
 // Proxy service for accessing Pixiv images (which have referrer checks)
@@ -91,7 +104,10 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 			return null;
 		}
 
-		return buildSummary(data.body, artworkId);
+		const thumbnail = getProxiedThumbnail(data.body, artworkId) ||
+			await fetchPagesThumbnail(artworkId, opts);
+
+		return buildSummary(data.body, artworkId, thumbnail);
 	} catch (error) {
 		console.error({
 			event: 'plugin_error',
@@ -106,7 +122,11 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 /**
  * Build Summary object from API response
  */
-function buildSummary(body: NonNullable<PixivAjaxResponse['body']>, artworkId: string): Summary {
+function buildSummary(
+	body: NonNullable<PixivAjaxResponse['body']>,
+	artworkId: string,
+	thumbnail: string | null,
+): Summary {
 	// Get description: prefer Twitter description, fallback to regular description
 	let description = body.extraData?.meta?.twitter?.description || body.description;
 	if (description) {
@@ -115,9 +135,6 @@ function buildSummary(body: NonNullable<PixivAjaxResponse['body']>, artworkId: s
 		description = $.text();
 		description = clip(description, 300);
 	}
-
-	// Get proxied thumbnail URL
-	const thumbnail = getProxiedThumbnail(body, artworkId);
 
 	// Extract first 5 tags
 	const tags = body.tags.tags
@@ -172,4 +189,37 @@ function getProxiedThumbnail(body: NonNullable<PixivAjaxResponse['body']>, artwo
 
 	// Replace i.pximg.net with proxy service
 	return imageUrl.replace('i.pximg.net', PROXY_SERVICE);
+}
+
+async function fetchPagesThumbnail(artworkId: string, opts?: GeneralScrapingOptions): Promise<string | null> {
+	try {
+		const response = await get(`https://www.pixiv.net/ajax/illust/${artworkId}/pages`, {
+			allowPrivateIp: opts?.allowPrivateIp,
+		});
+		const data = JSON.parse(response) as PixivPagesResponse;
+
+		if (data.error) {
+			console.warn({
+				event: 'plugin_pages_api_error',
+				plugin: 'pixiv',
+				artworkId,
+				apiError: data.error,
+				message: data.message,
+			});
+			return null;
+		}
+		if (!data.body?.[0]?.urls) return null;
+
+		const urls = data.body[0].urls;
+		const imageUrl = urls.regular || urls.small || urls.thumb_mini || urls.original;
+		return imageUrl ? imageUrl.replace('i.pximg.net', PROXY_SERVICE) : null;
+	} catch (error) {
+		console.warn({
+			event: 'plugin_pages_api_error',
+			plugin: 'pixiv',
+			artworkId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		return null;
+	}
 }

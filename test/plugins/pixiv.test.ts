@@ -226,6 +226,56 @@ describe('Pixiv Plugin', () => {
 		expect(result?.thumbnail).toBe('https://pximg.cocomi.eu.org/img-master/img/2024/05/01/10/00/00/33333_p0_master1200.jpg');
 	});
 
+	test('Ajax API response - fallback thumbnail from pages API', async () => {
+		const { summarize } = await import('@/plugins/pixiv.js');
+		const apiResponse = {
+			error: false,
+			message: '',
+			body: {
+				title: 'Pages Thumbnail Test',
+				description: 'Test',
+				userName: 'artist',
+				userId: '121277865',
+				bookmarkCount: 500,
+				pageCount: 1,
+				tags: {
+					tags: [],
+				},
+				urls: {
+					mini: null,
+					thumb: null,
+					small: null,
+					regular: null,
+					original: null,
+				},
+				userIllusts: {
+					'121277865': null,
+				},
+			},
+		};
+		const pagesResponse = {
+			error: false,
+			message: '',
+			body: [
+				{
+					urls: {
+						regular: 'https://i.pximg.net/img-master/img/2024/08/08/00/03/57/121277865_p0_master1200.jpg',
+					},
+					width: 827,
+					height: 1169,
+				},
+			],
+		};
+
+		setupMockJsonResponse('https://www.pixiv.net/ajax/illust/121277865', apiResponse);
+		setupMockJsonResponse('https://www.pixiv.net/ajax/illust/121277865/pages', pagesResponse);
+
+		const result = await summarize(new URL('https://www.pixiv.net/artworks/121277865'));
+
+		expect(result).not.toBeNull();
+		expect(result?.thumbnail).toBe('https://pximg.cocomi.eu.org/img-master/img/2024/08/08/00/03/57/121277865_p0_master1200.jpg');
+	});
+
 	test('Ajax API response - no thumbnail available', async () => {
 		const { summarize } = await import('@/plugins/pixiv.js');
 		const apiResponse = {
@@ -247,6 +297,11 @@ describe('Pixiv Plugin', () => {
 		};
 
 		setupMockJsonResponse('https://www.pixiv.net/ajax/illust/44444', apiResponse);
+		setupMockJsonResponse('https://www.pixiv.net/ajax/illust/44444/pages', {
+			error: false,
+			message: '',
+			body: [],
+		});
 
 		const result = await summarize(new URL('https://www.pixiv.net/artworks/44444'));
 
