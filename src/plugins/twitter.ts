@@ -75,7 +75,8 @@ function buildSummary(tweet: FxTwitterResponse['tweet']): summary {
 	if (tweet.media?.mosaic?.type === 'mosaic_photo') {
 		thumbnail = tweet.media.mosaic.formats.jpeg;
 	} else if (tweet.media?.photos?.[0]) {
-		thumbnail = tweet.media.photos[0].url + '?name=large';
+		const photoUrl = tweet.media.photos[0].url;
+		thumbnail = photoUrl.includes('?') ? photoUrl : photoUrl + '?name=large';
 	}
 
 	return {

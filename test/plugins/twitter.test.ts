@@ -58,6 +58,36 @@ describe('Twitter/X Plugin', () => {
 		expect(result?.icon).toBe('https://pbs.twimg.com/profile_images/123/avatar.jpg');
 	});
 
+	test('photo URL with existing query should not append another query', async () => {
+		const { summarize } = await import('@/plugins/twitter.js');
+		const mockResponse = {
+			tweet: {
+				author: {
+					screen_name: 'anime_nanashi',
+					name: 'ななし',
+					avatar_url: 'https://pbs.twimg.com/profile_images/1897070645344919558/7XK8nzoN_200x200.jpg',
+				},
+				url: 'https://x.com/anime_nanashi/status/2049066095991288077',
+				text: '毎話作画が変化する特殊なアニメ↓↓',
+				created_timestamp: 1777370401,
+				media: {
+					photos: [
+						{
+							type: 'photo',
+							url: 'https://pbs.twimg.com/media/HG-q1UgasAAXHMd.jpg?name=orig',
+						},
+					],
+				},
+			},
+		};
+
+		setupMockJsonResponse('https://api.fxtwitter.com/i/status/2049066095991288077', mockResponse);
+
+		const result = await summarize(new URL('https://x.com/anime_nanashi/status/2049066095991288077'));
+		expect(result).not.toBeNull();
+		expect(result?.thumbnail).toBe('https://pbs.twimg.com/media/HG-q1UgasAAXHMd.jpg?name=orig');
+	});
+
 	test('twitter.com URL should be handled by plugin', async () => {
 		const { summarize } = await import('@/plugins/twitter.js');
 		const mockResponse = {
