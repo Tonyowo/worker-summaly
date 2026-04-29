@@ -35,7 +35,8 @@ interface FxTwitterResponse {
 				formats: { jpeg: string };
 			};
 			photos?: Array<{ type: string; url: string }>;
-			all?: Array<{ type: string; url: string }>;
+			videos?: Array<{ type: 'video' | 'gif'; url: string; thumbnail_url?: string }>;
+			all?: Array<{ type: string; url: string; thumbnail_url?: string }>;
 		};
 	};
 }
@@ -77,6 +78,16 @@ function buildSummary(tweet: FxTwitterResponse['tweet']): summary {
 	} else if (tweet.media?.photos?.[0]) {
 		const photoUrl = tweet.media.photos[0].url;
 		thumbnail = photoUrl.includes('?') ? photoUrl : photoUrl + '?name=large';
+	} else if (tweet.media?.videos?.[0]?.thumbnail_url) {
+		thumbnail = tweet.media.videos[0].thumbnail_url;
+	} else {
+		const video = tweet.media?.all?.find(media =>
+			(media.type === 'video' || media.type === 'gif') &&
+			!!media.thumbnail_url
+		);
+		if (video?.thumbnail_url) {
+			thumbnail = video.thumbnail_url;
+		}
 	}
 
 	return {

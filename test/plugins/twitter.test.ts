@@ -143,6 +143,36 @@ describe('Twitter/X Plugin', () => {
 		expect(result?.thumbnail).toBe('https://pbs.twimg.com/media/mosaic.jpg');
 	});
 
+	test('tweet with video should use video thumbnail', async () => {
+		const { summarize } = await import('@/plugins/twitter.js');
+		const mockResponse = {
+			tweet: {
+				author: {
+					screen_name: 'testuser',
+					name: 'Test User',
+				},
+				url: 'https://x.com/testuser/status/222333444',
+				text: 'Tweet with video',
+				created_timestamp: 1704067200,
+				media: {
+					videos: [
+						{
+							type: 'video',
+							url: 'https://video.twimg.com/ext_tw_video/example.mp4',
+							thumbnail_url: 'https://pbs.twimg.com/ext_tw_video_thumb/example.jpg',
+						},
+					],
+				},
+			},
+		};
+
+		setupMockJsonResponse('https://api.fxtwitter.com/i/status/222333444', mockResponse);
+
+		const result = await summarize(new URL('https://x.com/testuser/status/222333444'));
+		expect(result).not.toBeNull();
+		expect(result?.thumbnail).toBe('https://pbs.twimg.com/ext_tw_video_thumb/example.jpg');
+	});
+
 	test('fallback to vxtwitter API when fxtwitter fails', async () => {
 		const { summarize } = await import('@/plugins/twitter.js');
 		const vxResponse = {
