@@ -66,7 +66,7 @@ interface PixivPagesResponse {
 }
 
 // Proxy service for accessing Pixiv images (which have referrer checks)
-const PROXY_SERVICE = 'pximg.cocomi.eu.org';
+const PROXY_SERVICE = 'i.pixiv.cat';
 
 /**
  * Test if URL is a Pixiv artwork page

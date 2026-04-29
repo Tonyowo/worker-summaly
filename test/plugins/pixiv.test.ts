@@ -85,7 +85,7 @@ describe('Pixiv Plugin', () => {
 		expect(result?.description).toContain('作者: test_artist');
 		expect(result?.description).toContain('收藏: 1500');
 		expect(result?.description).toContain('標籤: 風景, オリジナル, イラスト, 美麗, 自然');
-		expect(result?.thumbnail).toBe('https://pximg.cocomi.eu.org/img-master/img/2024/01/01/12/00/00/12345_p0_master1200.jpg');
+		expect(result?.thumbnail).toBe('https://i.pixiv.cat/img-master/img/2024/01/01/12/00/00/12345_p0_master1200.jpg');
 		expect(result?.sitename).toBe('Pixiv');
 		expect(result?.player.url).toBeNull();
 		expect(result?.activityPub).toBeNull();
@@ -122,7 +122,38 @@ describe('Pixiv Plugin', () => {
 
 		expect(result).not.toBeNull();
 		expect(result?.title).toBe('Sunset Landscape');
-		expect(result?.thumbnail).toBe('https://pximg.cocomi.eu.org/img-master/img/2024/02/01/18/30/00/67890_p0_master1200.jpg');
+		expect(result?.thumbnail).toBe('https://i.pixiv.cat/img-master/img/2024/02/01/18/30/00/67890_p0_master1200.jpg');
+	});
+
+	test('Ajax API response - artwork with regular thumbnail uses reachable proxy', async () => {
+		const { summarize } = await import('@/plugins/pixiv.js');
+		const apiResponse = {
+			error: false,
+			message: '',
+			body: {
+				title: '玄龍門',
+				description: 'Twitter',
+				userName: '残夜 ZANYA',
+				userId: '90875712',
+				bookmarkCount: 1000,
+				pageCount: 1,
+				tags: {
+					tags: [
+						{ tag: 'ブルーアーカイブ' },
+					],
+				},
+				urls: {
+					regular: 'https://i.pximg.net/img-master/img/2023/05/30/23/32/36/108584072_p0_master1200.jpg',
+				},
+			},
+		};
+
+		setupMockJsonResponse('https://www.pixiv.net/ajax/illust/108584072', apiResponse);
+
+		const result = await summarize(new URL('https://www.pixiv.net/artworks/108584072'));
+
+		expect(result).not.toBeNull();
+		expect(result?.thumbnail).toBe('https://i.pixiv.cat/img-master/img/2023/05/30/23/32/36/108584072_p0_master1200.jpg');
 	});
 
 	test('Ajax API response - HTML tags removed from description', async () => {
@@ -223,7 +254,7 @@ describe('Pixiv Plugin', () => {
 		const result = await summarize(new URL('https://www.pixiv.net/artworks/33333'));
 
 		expect(result).not.toBeNull();
-		expect(result?.thumbnail).toBe('https://pximg.cocomi.eu.org/img-master/img/2024/05/01/10/00/00/33333_p0_master1200.jpg');
+		expect(result?.thumbnail).toBe('https://i.pixiv.cat/img-master/img/2024/05/01/10/00/00/33333_p0_master1200.jpg');
 	});
 
 	test('Ajax API response - fallback thumbnail from pages API', async () => {
@@ -273,7 +304,7 @@ describe('Pixiv Plugin', () => {
 		const result = await summarize(new URL('https://www.pixiv.net/artworks/121277865'));
 
 		expect(result).not.toBeNull();
-		expect(result?.thumbnail).toBe('https://pximg.cocomi.eu.org/img-master/img/2024/08/08/00/03/57/121277865_p0_master1200.jpg');
+		expect(result?.thumbnail).toBe('https://i.pixiv.cat/img-master/img/2024/08/08/00/03/57/121277865_p0_master1200.jpg');
 	});
 
 	test('Ajax API response - no thumbnail available', async () => {
