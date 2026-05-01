@@ -24,25 +24,25 @@ describe('Cloud drive fallback plugin', () => {
 		expect(testUrl(new URL('https://www.alipan.com/drive/home'))).toBe(false);
 	});
 
-	test('returns a Baidu Netdisk text card with icon and no thumbnail', async () => {
+	test('returns a Baidu Netdisk branded card with icon and thumbnail', async () => {
 		const result = await summaly('https://pan.baidu.com/s/1VwznG3qTNCakwlE6tnCxhQ?pwd=kmnb');
 
 		expect(result.title).toBe('百度网盘分享');
 		expect(result.description).toBe('需要提取码 kmnb');
 		expect(result.sitename).toBe('百度网盘');
 		expect(result.icon).toBe('https://pan.baidu.com/m-static/base/static/images/favicon.ico');
-		expect(result.thumbnail).toBeNull();
+		expect(result.thumbnail).toBe('https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/b0/1d/fa/b01dfa5a-7f7c-1f4e-2eaa-d88b51d52771/AppIcon-0-0-1x_U007ephone-0-1-0-0-sRGB-85-220.png/512x512bb.jpg');
 		expect(result.player.url).toBeNull();
 	});
 
-	test('returns an Aliyun Drive text card with icon and no thumbnail', async () => {
+	test('returns an Aliyun Drive branded card with icon and thumbnail', async () => {
 		const result = await summaly('https://www.alipan.com/s/L6N3rF4xJiN?pwd=8b0c');
 
 		expect(result.title).toBe('阿里云盘分享');
 		expect(result.description).toBe('需要提取码 8b0c');
 		expect(result.sitename).toBe('阿里云盘');
 		expect(result.icon).toBe('https://img.alicdn.com/imgextra/i1/O1CN01JDQCi21Dc8EfbRwvF_!!6000000000236-73-tps-64-64.ico');
-		expect(result.thumbnail).toBeNull();
+		expect(result.thumbnail).toBe('https://img.alicdn.com/imgextra/i2/O1CN01DOYcs71v3B6bOemVM_!!6000000006116-2-tps-512-512.png');
 		expect(result.player.url).toBeNull();
 	});
 
