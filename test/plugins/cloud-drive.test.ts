@@ -30,8 +30,8 @@ describe('Cloud drive fallback plugin', () => {
 		expect(result.title).toBe('百度网盘分享');
 		expect(result.description).toBe('需要提取码 kmnb');
 		expect(result.sitename).toBe('百度网盘');
-		expect(result.icon).toBe('https://pan.baidu.com/m-static/base/static/images/favicon.ico');
-		expect(result.thumbnail).toBe('https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/b0/1d/fa/b01dfa5a-7f7c-1f4e-2eaa-d88b51d52771/AppIcon-0-0-1x_U007ephone-0-1-0-0-sRGB-85-220.png/512x512bb.jpg');
+		expect(result.icon).toBe('https://nd-static.bdstatic.com/m-static/wp-brand/favicon.ico');
+		expect(result.thumbnail).toBe('https://nd-static.bdstatic.com/m-static/wp-brand/img/logo-pan.6af52c5e.png');
 		expect(result.player.url).toBeNull();
 	});
 

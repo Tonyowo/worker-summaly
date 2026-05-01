@@ -3,8 +3,8 @@ import Summary from '@/summary.js';
 export const name = 'cloud-drive';
 export const skipRedirectResolution = true;
 
-const BAIDU_NETDISK_ICON = 'https://pan.baidu.com/m-static/base/static/images/favicon.ico';
-const BAIDU_NETDISK_THUMBNAIL = 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/b0/1d/fa/b01dfa5a-7f7c-1f4e-2eaa-d88b51d52771/AppIcon-0-0-1x_U007ephone-0-1-0-0-sRGB-85-220.png/512x512bb.jpg';
+const BAIDU_NETDISK_ICON = 'https://nd-static.bdstatic.com/m-static/wp-brand/favicon.ico';
+const BAIDU_NETDISK_THUMBNAIL = 'https://nd-static.bdstatic.com/m-static/wp-brand/img/logo-pan.6af52c5e.png';
 const ALIYUN_DRIVE_ICON = 'https://img.alicdn.com/imgextra/i1/O1CN01JDQCi21Dc8EfbRwvF_!!6000000000236-73-tps-64-64.ico';
 const ALIYUN_DRIVE_THUMBNAIL = 'https://img.alicdn.com/imgextra/i2/O1CN01DOYcs71v3B6bOemVM_!!6000000006116-2-tps-512-512.png';
 
