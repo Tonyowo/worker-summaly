@@ -25,9 +25,11 @@ import * as pixiv from './pixiv.js';
 import * as wikipedia from './wikipedia.js';
 import * as youtube from './youtube.js';
 import * as branchIoDeeplinks from './branchio-deeplinks.js';
+import * as cloudDrive from './cloud-drive.js';
 import { SummalyPlugin } from '@/iplugin.js';
 
 export const plugins: SummalyPlugin[] = [
+	cloudDrive,
 	misskey,
 	activitypub,
 	amazon,

@@ -5,4 +5,5 @@ export interface SummalyPlugin {
 	test: (url: URL) => boolean;
 	summarize: (url: URL, opts?: GeneralScrapingOptions) => Promise<Summary | null>;
 	name?: string;
+	skipRedirectResolution?: boolean;
 }

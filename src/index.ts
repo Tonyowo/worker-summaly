@@ -98,6 +98,33 @@ export const summaly = async (url: string, options?: SummalyOptions): Promise<Su
 	};
 
 	const plugins = builtinPlugins.concat(opts.plugins || []);
+	const scrapingOptions: GeneralScrapingOptions = {
+		lang: opts.lang,
+		userAgent: opts.userAgent,
+		responseTimeout: opts.responseTimeout,
+		followRedirects: opts.followRedirects,
+		operationTimeout: opts.operationTimeout,
+		contentLengthLimit: opts.contentLengthLimit,
+		contentLengthRequired: opts.contentLengthRequired,
+		allowPrivateIp: opts.allowPrivateIp,
+	};
+
+	const originalUrl = new URL(url);
+	const directMatch = plugins.find(plugin => plugin.skipRedirectResolution && plugin.test(originalUrl));
+	if (directMatch) {
+		console.debug({
+			event: 'plugin_matched_before_redirect',
+			url,
+			plugin: getPluginName(directMatch),
+		});
+
+		const summary = await directMatch.summarize(originalUrl, scrapingOptions);
+		if (summary != null) {
+			return Object.assign(summary, {
+				url,
+			});
+		}
+	}
 
 	let actualUrl = url;
 	if (opts.followRedirects) {
@@ -129,17 +156,6 @@ export const summaly = async (url: string, options?: SummalyOptions): Promise<Su
 	const match = plugins.find(plugin => plugin.test(_url));
 
 	// Get summary
-	const scrapingOptions: GeneralScrapingOptions = {
-		lang: opts.lang,
-		userAgent: opts.userAgent,
-		responseTimeout: opts.responseTimeout,
-		followRedirects: opts.followRedirects,
-		operationTimeout: opts.operationTimeout,
-		contentLengthLimit: opts.contentLengthLimit,
-		contentLengthRequired: opts.contentLengthRequired,
-		allowPrivateIp: opts.allowPrivateIp,
-	};
-
 	let summary = null;
 	const pluginName = match ? getPluginName(match) : null;
 
