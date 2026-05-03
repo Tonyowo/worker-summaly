@@ -8,6 +8,7 @@ import * as bilibili from './bilibili.js';
 import * as bluesky from './bluesky.js';
 import * as dlsite from './dlsite.js';
 import * as ehentai from './ehentai.js';
+import * as gelbooru from './gelbooru.js';
 import * as iwara from './iwara.js';
 import * as komiflo from './komiflo.js';
 import * as nijie from './nijie.js';
@@ -41,6 +42,7 @@ export const plugins: SummalyPlugin[] = [
 	bluesky,
 	dlsite,
 	ehentai,
+	gelbooru,
 	iwara,
 	komiflo,
 	nijie,

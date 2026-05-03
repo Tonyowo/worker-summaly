@@ -27,6 +27,10 @@ export type FetchOptions = {
 
 const MAX_REDIRECTS = 10;
 
+function isCloudflareChallenge(response: Response): boolean {
+	return response.headers.get('cf-mitigated')?.toLowerCase() === 'challenge';
+}
+
 /**
  * Make an HTTP request using native fetch API
  */
@@ -104,6 +108,20 @@ export async function getResponse(args: FetchOptions): Promise<Response> {
 		}
 
 		clearTimeout(timeoutId);
+
+		if (isCloudflareChallenge(response)) {
+			console.warn({
+				event: 'http_response_cloudflare_challenge',
+				url: args.url,
+				method: args.method,
+				status: response.status,
+			});
+			throw new StatusError(
+				'Cloudflare challenge blocked access',
+				response.status,
+				response.statusText,
+			);
+		}
 
 		// Check HTTP status code
 		if (!response.ok) {

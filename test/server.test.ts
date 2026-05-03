@@ -194,4 +194,29 @@ describe('URL safety', () => {
 			global.fetch = originalFetch;
 		}
 	});
+
+	it('reports Cloudflare challenges clearly', async () => {
+		const originalFetch = global.fetch;
+		global.fetch = vi.fn().mockResolvedValue(new Response('<title>Just a moment...</title>', {
+			status: 403,
+			statusText: 'Forbidden',
+			headers: {
+				'content-type': 'text/html; charset=UTF-8',
+				'cf-mitigated': 'challenge',
+			},
+		})) as typeof fetch;
+
+		try {
+			await expect(getResponse({
+				url: 'https://93.184.216.34/',
+				method: 'GET',
+				headers: {
+					accept: '*/*',
+				},
+				allowPrivateIp: false,
+			})).rejects.toThrow('Cloudflare challenge blocked access');
+		} finally {
+			global.fetch = originalFetch;
+		}
+	});
 });
