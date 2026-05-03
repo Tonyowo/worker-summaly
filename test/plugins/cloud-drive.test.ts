@@ -40,7 +40,7 @@ describe('Cloud drive fallback plugin', () => {
 			assetBaseUrl: 'https://summaly.example',
 		});
 
-		expect(result.thumbnail).toBe('https://summaly.example/assets/baidu-netdisk-icon.png');
+		expect(result.thumbnail).toBe('https://summaly.example/assets/baidu-netdisk-preview.png');
 	});
 
 	test('returns an Aliyun Drive branded card with icon and thumbnail', async () => {

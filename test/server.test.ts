@@ -32,7 +32,7 @@ describe('local HTTP handler', () => {
 	});
 
 	it('serves built-in preview assets', async () => {
-		const response = await handleRequest(request('/assets/baidu-netdisk-icon.png'));
+		const response = await handleRequest(request('/assets/baidu-netdisk-preview.png'));
 		const body = await response.arrayBuffer();
 		const pngHeader = new DataView(body);
 
@@ -135,7 +135,7 @@ describe('local HTTP handler', () => {
 		const result = await response.json();
 
 		expect(response.status).toBe(200);
-		expect(result.thumbnail).toBe('http://localhost/assets/baidu-netdisk-icon.png');
+		expect(result.thumbnail).toBe('http://localhost/assets/baidu-netdisk-preview.png');
 	});
 
 	it('returns 500 when summarization fails', async () => {

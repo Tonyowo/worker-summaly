@@ -16,7 +16,7 @@ const corsHeaders = {
 	'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-const baiduNetdiskIconPath = new URL('../assets/baidu-netdisk-icon.png', import.meta.url);
+const baiduNetdiskPreviewPath = new URL('../assets/baidu-netdisk-preview.png', import.meta.url);
 
 function jsonResponse(data: unknown, status = 200): Response {
 	return new Response(JSON.stringify(data), {
@@ -92,8 +92,8 @@ export async function handleRequest(
 		return jsonResponse({ error: 'Method not allowed' }, 405);
 	}
 
-	if (requestUrl.pathname === '/assets/baidu-netdisk-icon.png') {
-		return await imageResponse(baiduNetdiskIconPath);
+	if (requestUrl.pathname === '/assets/baidu-netdisk-preview.png') {
+		return await imageResponse(baiduNetdiskPreviewPath);
 	}
 
 	if (requestUrl.pathname === '/health') {

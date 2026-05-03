@@ -5,7 +5,7 @@ export const name = 'cloud-drive';
 export const skipRedirectResolution = true;
 
 const BAIDU_NETDISK_ICON = 'https://nd-static.bdstatic.com/m-static/wp-brand/favicon.ico';
-const BAIDU_NETDISK_THUMBNAIL_PATH = '/assets/baidu-netdisk-icon.png';
+const BAIDU_NETDISK_THUMBNAIL_PATH = '/assets/baidu-netdisk-preview.png';
 const BAIDU_NETDISK_THUMBNAIL_FALLBACK = 'https://nd-static.bdstatic.com/m-static/wp-brand/img/logo-pan.6af52c5e.png';
 const ALIYUN_DRIVE_ICON = 'https://img.alicdn.com/imgextra/i1/O1CN01JDQCi21Dc8EfbRwvF_!!6000000000236-73-tps-64-64.ico';
 const ALIYUN_DRIVE_THUMBNAIL = 'https://img.alicdn.com/imgextra/i2/O1CN01DOYcs71v3B6bOemVM_!!6000000006116-2-tps-512-512.png';
