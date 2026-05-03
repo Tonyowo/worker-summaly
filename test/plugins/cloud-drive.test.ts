@@ -35,6 +35,14 @@ describe('Cloud drive fallback plugin', () => {
 		expect(result.player.url).toBeNull();
 	});
 
+	test('uses the service asset URL for Baidu Netdisk when an asset base URL is provided', async () => {
+		const result = await summaly('https://pan.baidu.com/s/1VwznG3qTNCakwlE6tnCxhQ?pwd=kmnb', {
+			assetBaseUrl: 'https://summaly.example',
+		});
+
+		expect(result.thumbnail).toBe('https://summaly.example/assets/baidu-netdisk-icon.png');
+	});
+
 	test('returns an Aliyun Drive branded card with icon and thumbnail', async () => {
 		const result = await summaly('https://www.alipan.com/s/L6N3rF4xJiN?pwd=8b0c');
 

@@ -60,6 +60,11 @@ export type SummalyOptions = {
 	 * Whether requests to private, local, and reserved addresses are allowed.
 	 */
 	allowPrivateIp?: boolean;
+
+	/**
+	 * Public base URL for built-in static preview assets.
+	 */
+	assetBaseUrl?: string;
 };
 
 export const summalyDefaultOptions = {
@@ -107,6 +112,7 @@ export const summaly = async (url: string, options?: SummalyOptions): Promise<Su
 		contentLengthLimit: opts.contentLengthLimit,
 		contentLengthRequired: opts.contentLengthRequired,
 		allowPrivateIp: opts.allowPrivateIp,
+		assetBaseUrl: opts.assetBaseUrl,
 	};
 
 	const originalUrl = new URL(url);

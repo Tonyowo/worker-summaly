@@ -1,10 +1,12 @@
+import type { GeneralScrapingOptions } from '@/general.js';
 import Summary from '@/summary.js';
 
 export const name = 'cloud-drive';
 export const skipRedirectResolution = true;
 
 const BAIDU_NETDISK_ICON = 'https://nd-static.bdstatic.com/m-static/wp-brand/favicon.ico';
-const BAIDU_NETDISK_THUMBNAIL = 'https://nd-static.bdstatic.com/m-static/wp-brand/img/logo-pan.6af52c5e.png';
+const BAIDU_NETDISK_THUMBNAIL_PATH = '/assets/baidu-netdisk-icon.png';
+const BAIDU_NETDISK_THUMBNAIL_FALLBACK = 'https://nd-static.bdstatic.com/m-static/wp-brand/img/logo-pan.6af52c5e.png';
 const ALIYUN_DRIVE_ICON = 'https://img.alicdn.com/imgextra/i1/O1CN01JDQCi21Dc8EfbRwvF_!!6000000000236-73-tps-64-64.ico';
 const ALIYUN_DRIVE_THUMBNAIL = 'https://img.alicdn.com/imgextra/i2/O1CN01DOYcs71v3B6bOemVM_!!6000000006116-2-tps-512-512.png';
 
@@ -66,17 +68,25 @@ function descriptionFor(url: URL): string {
 	return '打开链接查看分享内容';
 }
 
+function assetUrl(path: string, assetBaseUrl?: string): string {
+	if (!assetBaseUrl) {
+		return BAIDU_NETDISK_THUMBNAIL_FALLBACK;
+	}
+
+	return new URL(path, assetBaseUrl).href;
+}
+
 export function test(url: URL): boolean {
 	return isBaiduNetdiskShare(url) || isAliyunDriveShare(url);
 }
 
-export async function summarize(url: URL): Promise<Summary | null> {
+export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
 	if (isBaiduNetdiskShare(url)) {
 		return {
 			title: '百度网盘分享',
 			icon: BAIDU_NETDISK_ICON,
 			description: descriptionFor(url),
-			thumbnail: BAIDU_NETDISK_THUMBNAIL,
+			thumbnail: assetUrl(BAIDU_NETDISK_THUMBNAIL_PATH, opts?.assetBaseUrl),
 			player: EMPTY_PLAYER,
 			sitename: '百度网盘',
 			sensitive: false,

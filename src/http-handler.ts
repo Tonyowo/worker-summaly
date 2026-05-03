@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import type { SummalyResult } from '@/summary.js';
 import { summaly, type SummalyOptions } from '@/index.js';
 import { assertPublicUrl } from '@/utils/url-safety.js';
@@ -15,11 +16,24 @@ const corsHeaders = {
 	'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+const baiduNetdiskIconPath = new URL('../assets/baidu-netdisk-icon.png', import.meta.url);
+
 function jsonResponse(data: unknown, status = 200): Response {
 	return new Response(JSON.stringify(data), {
 		status,
 		headers: {
 			'Content-Type': 'application/json',
+			...corsHeaders,
+		},
+	});
+}
+
+async function imageResponse(path: URL): Promise<Response> {
+	return new Response(await readFile(path), {
+		status: 200,
+		headers: {
+			'Content-Type': 'image/png',
+			'Cache-Control': 'public, max-age=31536000, immutable',
 			...corsHeaders,
 		},
 	});
@@ -47,6 +61,15 @@ function parseBooleanParam(value: string | null): boolean | undefined {
 	return undefined;
 }
 
+function getAssetBaseUrl(requestUrl: URL): string {
+	const configured = process.env.PUBLIC_BASE_URL;
+	if (configured) {
+		return configured;
+	}
+
+	return requestUrl.origin;
+}
+
 export async function handleRequest(
 	request: Request,
 	dependencies: HttpHandlerDependencies = {},
@@ -67,6 +90,10 @@ export async function handleRequest(
 			path: requestUrl.pathname,
 		});
 		return jsonResponse({ error: 'Method not allowed' }, 405);
+	}
+
+	if (requestUrl.pathname === '/assets/baidu-netdisk-icon.png') {
+		return await imageResponse(baiduNetdiskIconPath);
 	}
 
 	if (requestUrl.pathname === '/health') {
@@ -129,6 +156,7 @@ export async function handleRequest(
 			contentLengthRequired,
 			userAgent,
 			allowPrivateIp: false,
+			assetBaseUrl: getAssetBaseUrl(requestUrl),
 		});
 
 		console.info({

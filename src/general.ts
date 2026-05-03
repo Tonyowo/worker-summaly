@@ -193,6 +193,7 @@ export type GeneralScrapingOptions = {
 	contentLengthLimit?: number;
 	contentLengthRequired?: boolean;
 	allowPrivateIp?: boolean;
+	assetBaseUrl?: string;
 };
 
 export async function general(_url: URL | string, opts?: GeneralScrapingOptions): Promise<Summary | null> {

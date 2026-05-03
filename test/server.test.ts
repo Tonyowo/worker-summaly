@@ -31,6 +31,17 @@ describe('local HTTP handler', () => {
 		expect(await response.json()).toEqual({ status: 'ok' });
 	});
 
+	it('serves built-in preview assets', async () => {
+		const response = await handleRequest(request('/assets/baidu-netdisk-icon.png'));
+		const body = await response.arrayBuffer();
+		const pngHeader = new DataView(body);
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get('Content-Type')).toBe('image/png');
+		expect(pngHeader.getUint32(16)).toBeGreaterThanOrEqual(1024);
+		expect(pngHeader.getUint32(20)).toBeGreaterThanOrEqual(1024);
+	});
+
 	it('returns 400 for missing url parameter', async () => {
 		const response = await handleRequest(request('/'));
 		expect(response.status).toBe(400);
@@ -78,6 +89,7 @@ describe('local HTTP handler', () => {
 		expect(await response.json()).toEqual(summary);
 		expect(summarize).toHaveBeenCalledWith('https://example.com', expect.objectContaining({
 			allowPrivateIp: false,
+			assetBaseUrl: 'http://localhost',
 		}));
 	});
 
@@ -109,7 +121,21 @@ describe('local HTTP handler', () => {
 			contentLengthRequired: true,
 			userAgent: 'CustomBot/1.0',
 			allowPrivateIp: false,
+			assetBaseUrl: 'http://localhost',
 		});
+	});
+
+	it('returns service-hosted preview assets for cloud drive cards', async () => {
+		const response = await handleRequest(
+			request('/api/summarize?url=https%3A%2F%2Fpan.baidu.com%2Fs%2F1VwznG3qTNCakwlE6tnCxhQ%3Fpwd%3Dkmnb'),
+			{
+				validateUrl: vi.fn().mockResolvedValue(undefined),
+			},
+		);
+		const result = await response.json();
+
+		expect(response.status).toBe(200);
+		expect(result.thumbnail).toBe('http://localhost/assets/baidu-netdisk-icon.png');
 	});
 
 	it('returns 500 when summarization fails', async () => {
