@@ -9,6 +9,8 @@ const BAIDU_NETDISK_THUMBNAIL_PATH = '/assets/baidu-netdisk-preview.png';
 const BAIDU_NETDISK_THUMBNAIL_FALLBACK = 'https://nd-static.bdstatic.com/m-static/wp-brand/img/logo-pan.6af52c5e.png';
 const ALIYUN_DRIVE_ICON = 'https://img.alicdn.com/imgextra/i1/O1CN01JDQCi21Dc8EfbRwvF_!!6000000000236-73-tps-64-64.ico';
 const ALIYUN_DRIVE_THUMBNAIL = 'https://img.alicdn.com/imgextra/i2/O1CN01DOYcs71v3B6bOemVM_!!6000000006116-2-tps-512-512.png';
+const QUARK_DRIVE_ICON = 'https://pan.quark.cn/favicon.ico';
+const QUARK_DRIVE_THUMBNAIL = 'https://g.alicdn.com/quark-cloud-drive/quark-cloud-drive-static-page/0.1.74/4c6c007286bf1936786b.png';
 
 const EMPTY_PLAYER = {
 	url: null,
@@ -35,6 +37,18 @@ function isAliyunDriveShare(url: URL): boolean {
 	}
 
 	if (!['alipan.com', 'www.alipan.com', 'aliyundrive.com', 'www.aliyundrive.com'].includes(url.hostname)) {
+		return false;
+	}
+
+	return url.pathname.startsWith('/s/');
+}
+
+function isQuarkDriveShare(url: URL): boolean {
+	if (!['http:', 'https:'].includes(url.protocol)) {
+		return false;
+	}
+
+	if (url.hostname !== 'pan.quark.cn') {
 		return false;
 	}
 
@@ -77,7 +91,7 @@ function assetUrl(path: string, assetBaseUrl?: string): string {
 }
 
 export function test(url: URL): boolean {
-	return isBaiduNetdiskShare(url) || isAliyunDriveShare(url);
+	return isBaiduNetdiskShare(url) || isAliyunDriveShare(url) || isQuarkDriveShare(url);
 }
 
 export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promise<Summary | null> {
@@ -103,6 +117,20 @@ export async function summarize(url: URL, opts?: GeneralScrapingOptions): Promis
 			thumbnail: ALIYUN_DRIVE_THUMBNAIL,
 			player: EMPTY_PLAYER,
 			sitename: '阿里云盘',
+			sensitive: false,
+			activityPub: null,
+			fediverseCreator: null,
+		};
+	}
+
+	if (isQuarkDriveShare(url)) {
+		return {
+			title: '夸克网盘分享',
+			icon: QUARK_DRIVE_ICON,
+			description: descriptionFor(url),
+			thumbnail: QUARK_DRIVE_THUMBNAIL,
+			player: EMPTY_PLAYER,
+			sitename: '夸克网盘',
 			sensitive: false,
 			activityPub: null,
 			fediverseCreator: null,
