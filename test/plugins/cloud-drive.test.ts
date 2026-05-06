@@ -76,7 +76,7 @@ describe('Cloud drive fallback plugin', () => {
 		expect(result.description).toBe('需要提取码 2Ke2');
 		expect(result.sitename).toBe('夸克网盘');
 		expect(result.icon).toBe('https://pan.quark.cn/favicon.ico');
-		expect(result.thumbnail).toBe('https://g.alicdn.com/quark-cloud-drive/quark-cloud-drive-static-page/0.1.74/4c6c007286bf1936786b.png');
+		expect(result.thumbnail).toBe('https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/98/fa/ea/98faeaeb-a791-000d-cc76-4ec35baa2bb9/AppIcon-0-0-1x_U007epad-0-1-sRGB-85-220.png/512x512bb.jpg');
 		expect(result.player.url).toBeNull();
 	});
 });

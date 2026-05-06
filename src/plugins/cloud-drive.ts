@@ -10,7 +10,7 @@ const BAIDU_NETDISK_THUMBNAIL_FALLBACK = 'https://nd-static.bdstatic.com/m-stati
 const ALIYUN_DRIVE_ICON = 'https://img.alicdn.com/imgextra/i1/O1CN01JDQCi21Dc8EfbRwvF_!!6000000000236-73-tps-64-64.ico';
 const ALIYUN_DRIVE_THUMBNAIL = 'https://img.alicdn.com/imgextra/i2/O1CN01DOYcs71v3B6bOemVM_!!6000000006116-2-tps-512-512.png';
 const QUARK_DRIVE_ICON = 'https://pan.quark.cn/favicon.ico';
-const QUARK_DRIVE_THUMBNAIL = 'https://g.alicdn.com/quark-cloud-drive/quark-cloud-drive-static-page/0.1.74/4c6c007286bf1936786b.png';
+const QUARK_DRIVE_THUMBNAIL = 'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/98/fa/ea/98faeaeb-a791-000d-cc76-4ec35baa2bb9/AppIcon-0-0-1x_U007epad-0-1-sRGB-85-220.png/512x512bb.jpg';
 
 const EMPTY_PLAYER = {
 	url: null,
